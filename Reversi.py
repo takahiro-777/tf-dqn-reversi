@@ -14,7 +14,7 @@ class Reversi:
         self.enable_actions = np.arange(self.screen_n_rows*self.screen_n_cols)
         # variables
         self.reset()
-        
+
 
     def reset(self):
         """ 盤面の初期化 """
@@ -28,15 +28,15 @@ class Reversi:
     def get_cells(self, i):
         r = int(i / self.screen_n_cols)
         c = int(i - ( r * self.screen_n_cols))
-        return self.screen[r][c]  
-        
-       
+        return self.screen[r][c]
+
+
     def set_cells(self, i, value):
         r = int(i / self.screen_n_cols)
         c = int(i - ( r * self.screen_n_cols))
-        self.screen[r][c] = value 
-      
-      
+        self.screen[r][c] = value
+
+
     def print_screen(self):
         """ 盤面の出力 """
         i = 0
@@ -47,9 +47,9 @@ class Reversi:
                 if self.screen[r][c] == self.Blank:
                     s2 = '{0:2d}'.format(self.enable_actions[i])
                 elif self.screen[r][c] == self.Black:
-                    s2 = '●'
+                    s2 = ' ●'
                 elif self.screen[r][c] == self.White:
-                    s2 = '○'
+                    s2 = ' ○'
                 s1 = s1 + ' ' + s2
                 i += 1
             print(s1)
@@ -57,13 +57,13 @@ class Reversi:
 
     def put_piece(self, action, color, puton=True):
         """自駒color(1 or 2)を位置action(0～63)に置く関数 """
-         
+
         if self.get_cells(action) != self.Blank:
             return -1
 
         """ ---------------------------------------------------------
            縦横斜めの8通りは、1次元データなので、
-           現在位置から[-9, -8, -7, -1, 1, 7, 8, 9] 
+           現在位置から[-9, -8, -7, -1, 1, 7, 8, 9]
            ずれた方向を見ます。
            これは、[-1, 0, 1]と[-8, 0, 8]の組合せで調べます
            (0と0のペアは除く)。
@@ -71,62 +71,62 @@ class Reversi:
         t, x, y, l = 0, action%8, action//8, []
         for di, fi in zip([-1, 0, 1], [x, 7, 7-x]):
             for dj, fj in zip([-8, 0, 8], [y, 7, 7-y]):
-                
+
                 if not di == dj == 0:
-                    b, j, k, m, n =[], 0, 0, [], 0                    
+                    b, j, k, m, n =[], 0, 0, [], 0
                     """a:対象位置のid リスト"""
                     a = self.enable_actions[action+di+dj::di+dj][:min(fi, fj)]
                     """b:対象位置の駒id リスト"""
-                    for i in a: 
+                    for i in a:
                         b.append(self.get_cells(i))
-                    
+
                     #print("a={:}".format(a))
                     #print("b={:}".format(b))
                     for i in b:
                         if i == 0: #空白
-                            break  
+                            break
                         elif i == color: #自駒があればその間の相手の駒を取れる
-                            """ 取れる数を確定する """ 
+                            """ 取れる数を確定する """
                             n = k
-                            """ ひっくり返す駒を確定する """ 
+                            """ ひっくり返す駒を確定する """
                             l += m
                             """ その方向の探査終了 """
                             break
                         else: #相手の駒
                             k += 1
-                            """ ひっくり返す位置をストックする """ 
-                            m.insert(0, a[j]) 
+                            """ ひっくり返す位置をストックする """
+                            m.insert(0, a[j])
                         j += 1
-                    #print("n={:}".format(n))    
-                    t += n 
-                    
-        #print("t={:}".format(t))            
-        #print("l={:}".format(l))            
+                    #print("n={:}".format(n))
+                    t += n
+
+        #print("t={:}".format(t))
+        #print("l={:}".format(l))
         if t == 0:
             return 0
-            
+
         if puton:
             """ ひっくり返す石を登録する """
             for i in l:
                 self.set_cells(i, color)
-            """ 今置いた石を追加する """ 
+            """ 今置いた石を追加する """
             self.set_cells(action, color)
-            
-            
+
+
         return t
-        
+
     def winner(self):
         """ 勝ったほうを返す """
         Black_score = self.get_score(self.Black)
         White_score = self.get_score(self.White)
-            
+
         if Black_score == White_score:
             return 0 # 引き分け
         elif Black_score > White_score:
             return self.Black # Blackの勝ち
         elif Black_score < White_score:
             return self.White # Whiteの勝ち
-        
+
     def get_score(self, color):
         """ 指定した色の現在のスコアを返す """
         score = 0
@@ -145,7 +145,7 @@ class Reversi:
                     """ ここ置ける!! """
                     result.insert(0, action)
         return result
-                    
+
 
     def update(self, action, color):
         """
@@ -159,15 +159,15 @@ class Reversi:
 
 
         return n
-            
-       
+
+
     def isEnd(self):
-        e1 = self.get_enables(self.Black)        
-        e2 = self.get_enables(self.White)  
+        e1 = self.get_enables(self.Black)
+        e2 = self.get_enables(self.White)
         if len(e1) == 0 and len(e2) == 0:
             #双方置けなくなったらゲーム終了
             return True
-            
+
         for action in self.enable_actions:
             if self.get_cells(action) == self.Blank:
                 return False
@@ -175,7 +175,7 @@ class Reversi:
         return True
 
 
- 
+
 if __name__ == "__main__":
    # game
     env = Reversi()
@@ -195,15 +195,15 @@ if __name__ == "__main__":
                     print(enables)
                     inp = input('>>>  ')
                     action_t = int(inp)
-                    for j in enables:                
+                    for j in enables:
                         if action_t == j:
-                            flg = True                       
+                            flg = True
                             break
                 n = env.execute_action(action_t, i)
 
             else:
                 print("パス")
-                       
+
 
     print("*** ゲーム終了 ***")
     env.print_screen()
@@ -211,4 +211,3 @@ if __name__ == "__main__":
         print("先手●の勝ち！ スコアは、{:}/{:}です。".format(env.get_score(env.Black),len(env.enable_actions)))
     else:
         print("後手○の勝ち！ スコアは、{:}/{:}です。".format(env.get_score(env.White),len(env.enable_actions)))
- 

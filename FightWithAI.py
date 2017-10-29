@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # game
     print("------------- GAME START ---------------")
     while not env.isEnd():
-        print("*** userターン○ ***")
+        print("*** userのターン○ ***")
         env.print_screen()
         enables = env.get_enables(1)
         if len(enables) > 0:
@@ -31,24 +31,24 @@ if __name__ == "__main__":
                 print(enables)
                 inp = input('>>>  ')
                 action_t = int(inp)
-                for i in enables:                
+                for i in enables:
                     if action_t == i:
-                        flg = True                       
+                        flg = True
                         break
-                
+
             env.update(action_t, 1)
         else:
             print("パス")
-            
-            
+
+
         if env.isEnd() == True:break
-            
+
         print("*** AIターン● ***")
         env.print_screen()
         enables = env.get_enables(2)
         if len(enables) > 0:
             qvalue, action_t = agent.select_enable_action(env.screen, enables)
-            print('>>>  {:}'.format(action_t))              
+            print('>>>  {:}'.format(action_t))
             env.update(action_t, 2)
         else:
             print("パス")
@@ -59,4 +59,3 @@ if __name__ == "__main__":
         print("あなたの勝ち！ スコアは、{:}です。".format(env.get_score(1)))
     else:
         print("あなたの負け！ AIのスコアは、{:}です。".format(env.get_score(2)))
-    
