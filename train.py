@@ -7,8 +7,8 @@ from dqn_agent import DQNAgent
 if __name__ == "__main__":
 
     # parameters
-    n_epochs = 100
-    #n_epochs = 50
+    #n_epochs = 1000
+    n_epochs = 5
     # environment, agent
     env = Reversi()
 
@@ -32,9 +32,11 @@ if __name__ == "__main__":
             for i in range(0, len(players)):
 
                 state = env.screen
+                #print(state)
                 targets = env.get_enables(playerID[i])
 
                 exploration = (n_epochs - e + 20)/(n_epochs + 20)
+                #exploration = 0.1
 
                 if len(targets) > 0:
                     # どこかに置く場所がある場合
@@ -61,7 +63,10 @@ if __name__ == "__main__":
                                     reword = 1
 
                             players[j].store_experience(state, targets, tr, reword, state_X, target_X, end)
-                            players[j].experience_replay()
+                            #print(state)
+                            #print(state_X)
+                            #if e > n_epochs*0.2:
+                            #    players[j].experience_replay()
 
 
                     # 行動を選択
@@ -71,14 +76,22 @@ if __name__ == "__main__":
                     # for log
                     loss = players[i].current_loss
                     Q_max, Q_action = players[i].select_enable_action(state, targets)
-                    print("player:{:1d} | pos:{:2d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
-                             playerID[i], action, loss, Q_max))
+                    print("player:{:1d} | pos:{:2d} | LOSS: {:.4f} | Q_MAX: {:.4f} | Q_ACTION: {:.4f}".format(
+                             playerID[i], action, loss, Q_max, Q_action))
 
 
 
 
                 # 行動を実行した結果
                 terminal = env.isEnd()
+
+        for j in range(0, len(players)):
+            if e > n_epochs*0.3:
+                for k in range(25):
+                    players[j].experience_replay()
+            elif e > n_epochs*0.1:
+                for k in range(5):
+                    players[j].experience_replay()
 
         w = env.winner()
         print("EPOCH: {:03d}/{:03d} | WIN: player{:1d}".format(

@@ -19,8 +19,8 @@ class DQNAgent:
         self.n_actions = len(self.enable_actions)
         self.rows = rows
         self.cols = cols
-        self.minibatch_size = 32
-        self.replay_memory_size = 1000
+        self.minibatch_size = 128
+        self.replay_memory_size = 10000
         self.learning_rate = 0.001
         #self.learning_rate = 0.005
         self.discount_factor = 0.9
@@ -46,18 +46,28 @@ class DQNAgent:
         x_flat = tf.reshape(self.x, [-1, size])
 
         # fully connected layer (32)
-        W_fc1 = tf.Variable(tf.truncated_normal([size, 100], stddev=0.01))
-        b_fc1 = tf.Variable(tf.zeros([100]))
+        #W_fc1 = tf.Variable(tf.truncated_normal([size, 100], stddev=0.01))
+        W_fc1 = tf.Variable(tf.zeros([size, 200]))
+        b_fc1 = tf.Variable(tf.zeros([200]))
         h_fc1 = tf.nn.relu(tf.matmul(x_flat, W_fc1) + b_fc1)
 
-        W_fc2 = tf.Variable(tf.truncated_normal([100, 100], stddev=0.01))
-        b_fc2 = tf.Variable(tf.zeros([100]))
-        h_fc2 = tf.nn.relu(tf.matmul(h_fc1, W_fc2) + b_fc1)
+        #W_fc2 = tf.Variable(tf.truncated_normal([100, 100], stddev=0.01))
+        W_fc2 = tf.Variable(tf.zeros([200, 200]))
+        b_fc2 = tf.Variable(tf.zeros([200]))
+        h_fc2 = tf.nn.relu(tf.matmul(h_fc1, W_fc2) + b_fc2)
+
+        W_fc3 = tf.Variable(tf.zeros([200, 200]))
+        b_fc3 = tf.Variable(tf.zeros([200]))
+        h_fc3 = tf.nn.relu(tf.matmul(h_fc2, W_fc3) + b_fc3)
 
         # output layer (n_actions)
-        W_out = tf.Variable(tf.truncated_normal([100, self.n_actions], stddev=0.01))
-        b_out = tf.Variable(tf.zeros([self.n_actions]))
-        self.y = tf.matmul(h_fc2, W_out) + b_out
+        W_out = tf.Variable(tf.truncated_normal([200, self.n_actions], stddev=0.01))
+        b_out_init = tf.zeros([self.n_actions])
+        b_out_init = b_out_init + np.array([0.5,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0.5])
+        b_out = tf.Variable(b_out_init)
+        #b_out = tf.Variable(tf.zeros([self.n_actions]))
+        self.y = tf.matmul(h_fc3, W_out) + b_out
+        #self.y = tf.nn.softmax(tf.matmul(h_fc3, W_out) + b_out)
 
         # loss function
         self.y_ = tf.placeholder(tf.float32, [None, self.n_actions])
@@ -103,6 +113,7 @@ class DQNAgent:
 
 
     def store_experience(self, state, targets, action, reward, state_1, targets_1, terminal):
+        print(self.D)
         self.D.append((state, targets, action, reward, state_1, targets_1, terminal))
 
     def experience_replay(self):
@@ -111,6 +122,7 @@ class DQNAgent:
 
         # sample random minibatch
         minibatch_size = min(len(self.D), self.minibatch_size)
+        #print(self.D)
         minibatch_indexes = np.random.randint(0, len(self.D), minibatch_size)
 
         for j in minibatch_indexes:
