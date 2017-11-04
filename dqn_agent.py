@@ -19,8 +19,10 @@ class DQNAgent:
         self.n_actions = len(self.enable_actions)
         self.rows = rows
         self.cols = cols
-        self.minibatch_size = 32
-        self.replay_memory_size = 1000
+        #self.minibatch_size = 32
+        #self.replay_memory_size = 1000
+        self.minibatch_size = 64
+        self.replay_memory_size = 2000
         self.learning_rate = 0.001
         self.discount_factor = 0.9
         self.exploration = 0.1
@@ -49,10 +51,14 @@ class DQNAgent:
         b_fc1 = tf.Variable(tf.zeros([size]))
         h_fc1 = tf.nn.relu(tf.matmul(x_flat, W_fc1) + b_fc1)
 
+        W_fc2 = tf.Variable(tf.truncated_normal([size, size], stddev=0.01))
+        b_fc2 = tf.Variable(tf.zeros([size]))
+        h_fc2 = tf.nn.relu(tf.matmul(h_fc1, W_fc2) + b_fc2)
+
         # output layer (n_actions)
         W_out = tf.Variable(tf.truncated_normal([size, self.n_actions], stddev=0.01))
         b_out = tf.Variable(tf.zeros([self.n_actions]))
-        self.y = tf.matmul(h_fc1, W_out) + b_out
+        self.y = tf.matmul(h_fc2, W_out) + b_out
 
         # loss function
         self.y_ = tf.placeholder(tf.float32, [None, self.n_actions])
@@ -74,7 +80,7 @@ class DQNAgent:
         return self.sess.run(self.y, feed_dict={self.x: [state]})[0]
 
     def select_action(self, state, targets, epsilon):
-    
+
         if np.random.rand() <= epsilon:
             # random
             return np.random.choice(targets)
@@ -82,19 +88,19 @@ class DQNAgent:
             # max_action Q(state, action)
             qvalue, action = self.select_enable_action(state, targets)
             return action
-            
+
     def select_enable_action(self, state, targets):
         Qs = self.Q_values(state)
         #descend = np.sort(Qs)
         index = np.argsort(Qs)
         for action in reversed(index):
             if action in targets:
-                break 
+                break
         # max_action Q(state, action)
-        qvalue = Qs[action]       
+        qvalue = Qs[action]
 
-        return qvalue, action      
-            
+        return qvalue, action
+
 
     def store_experience(self, state, targets, action, reward, state_1, targets_1, terminal):
         self.D.append((state, targets, action, reward, state_1, targets_1, terminal))
@@ -140,5 +146,6 @@ class DQNAgent:
             if checkpoint and checkpoint.model_checkpoint_path:
                 self.saver.restore(self.sess, checkpoint.model_checkpoint_path)
 
-    def save_model(self):
-        self.saver.save(self.sess, os.path.join(self.model_dir, self.model_name))
+    def save_model(self,epoch):
+        model_name_iter = self.environment_name+str(epoch)+".ckpt"
+        self.saver.save(self.sess, os.path.join(self.model_dir, model_name_iter))

@@ -3,38 +3,41 @@ import copy
 from Reversi import Reversi
 from dqn_agent import DQNAgent
 
-          
+
 if __name__ == "__main__":
-    
+
     # parameters
-    n_epochs = 1000
+    n_epochs = 5000
     # environment, agent
     env = Reversi()
- 
-    # playerID    
+
+    # playerID
     playerID = [env.Black, env.White, env.Black]
 
-    # player agent    
+    # player agent
     players = []
     # player[0]= env.Black
     players.append(DQNAgent(env.enable_actions, env.name, env.screen_n_rows, env.screen_n_cols))
     # player[1]= env.White
     players.append(DQNAgent(env.enable_actions, env.name, env.screen_n_rows, env.screen_n_cols))
-   
-    
+
+
     for e in range(n_epochs):
         # reset
         env.reset()
         terminal = False
         while terminal == False: # 1エピソードが終わるまでループ
 
-            for i in range(0, len(players)): 
-                
+            for i in range(0, len(players)):
+
                 state = env.screen
                 targets = env.get_enables(playerID[i])
-                
+
+                exploration = (n_epochs - e + 20)/(n_epochs + 20)
+                #exploration = 0.1
+
                 if len(targets) > 0:
-                    # どこかに置く場所がある場合 
+                    # どこかに置く場所がある場合
 
                     #すべての手をトレーニングする
                     for tr in targets:
@@ -56,13 +59,13 @@ if __name__ == "__main__":
                                 if win == playerID[j]:
                                     # 勝ったら報酬1を得る
                                     reword = 1
-                           
+
                             players[j].store_experience(state, targets, tr, reword, state_X, target_X, end)
-                            players[j].experience_replay()
+                            #players[j].experience_replay()
 
 
-                    # 行動を選択  
-                    action = players[i].select_action(state, targets, players[i].exploration)
+                    # 行動を選択
+                    action = players[i].select_action(state, targets, exploration)
                     # 行動を実行
                     env.update(action, playerID[i])
                     # for log
@@ -70,19 +73,30 @@ if __name__ == "__main__":
                     Q_max, Q_action = players[i].select_enable_action(state, targets)
                     print("player:{:1d} | pos:{:2d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
                              playerID[i], action, loss, Q_max))
-                     
 
-  
+
+
 
                 # 行動を実行した結果
-                terminal = env.isEnd()     
-                              
-        w = env.winner()                    
+                terminal = env.isEnd()
+
+        for j in range(0, len(players)):
+            if e > n_epochs*0.6:
+                for k in range(40):
+                    players[j].experience_replay()
+            elif e > n_epochs*0.3:
+                for k in range(20):
+                    players[j].experience_replay()
+            elif e > n_epochs*0.02:
+                for k in range(5):
+                    players[j].experience_replay()
+
+        w = env.winner()
         print("EPOCH: {:03d}/{:03d} | WIN: player{:1d}".format(
                          e, n_epochs, w))
 
 
     # 保存は後攻のplayer2 を保存する。
-    players[1].save_model()
-
-           
+    #players[1].save_model()
+    if e%50 == 0:
+        players[1].save_model(e)
